@@ -1,8 +1,18 @@
 {
   "name": "expense-tracker-api",
   "version": "0.1.0",
-  "description": "API REST de gestión de gastos personales - Entrega 1",
-  "author": "Juan Diego Aguilar Ángel, Juan Patiño Florez",
+  "description": "API REST de gestión de gastos personales - Entrega 1 | Curso: Integración Continua | Politécnico Grancolombiano",
+  "author": "Juan Diego Aguilar Ángel, Juan Patiño Flórez, Juan Camilo Pinzón Marín, Julián Giovanny Rey Mora, Marta Teresa Velandia Urrego",
+  "contributors": [
+    "Juan Diego Aguilar Ángel",
+    "Juan Patiño Flórez",
+    "Juan Camilo Pinzón Marín",
+    "Julián Giovanny Rey Mora",
+    "Marta Teresa Velandia Urrego"
+  ],
+  "course": "Integración Continua",
+  "professor": "Jesús Figueroa Guerrero",
+  "institution": "Politécnico Grancolombiano",
   "private": true,
   "license": "MIT",
   "scripts": {
@@ -29,7 +39,7 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/swagger": "^7.4.0",
     "@prisma/client": "^5.0.0",
-    "bcryptjs": "^3.0.3",
+    "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "passport": "^0.6.0",
@@ -41,7 +51,7 @@
     "@nestjs/cli": "^10.0.0",
     "@nestjs/schematics": "^10.0.0",
     "@nestjs/testing": "^10.0.0",
-    "@types/bcryptjs": "^3.0.0",
+    "@types/bcryptjs": "^2.4.6",
     "@types/express": "^4.17.17",
     "@types/jest": "^29.5.2",
     "@types/node": "^20.3.1",

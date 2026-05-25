@@ -2,8 +2,9 @@
 
 API REST de gestión de gastos personales desarrollada con **NestJS**, **TypeScript**, **PostgreSQL** y **Prisma ORM**. Desplegable mediante **Docker Compose** con dos contenedores comunicados entre sí.
 
-**Autores:** Juan Diego Aguilar Ángel · Juan Patiño Florez  
-**Módulo:** Integración Continua — Politécnico Grancolombiano  
+**Autores:** Juan Diego Aguilar Ángel · Juan Patiño Flórez · Juan Camilo Pinzón Marín · Julián Giovanny Rey Mora · Marta Teresa Velandia Urrego  
+**Curso:** Integración Continua — Politécnico Grancolombiano  
+**Profesor:** Jesús Figueroa Guerrero  
 **Entrega:** 1 (Semana 3)
 
 ---
@@ -181,8 +182,9 @@ cp .env.example .env
 # 3. Construir imágenes y levantar contenedores
 docker-compose up --build
 
-# La API estará disponible en:
-#   http://localhost:3000/api/v1
+# URLs disponibles:
+#   API base  → http://localhost:3000/api/v1
+#   Swagger   → http://localhost:3000/docs
 ```
 
 Para detener los contenedores:
@@ -208,22 +210,66 @@ docker logs expense_tracker_db
 
 ### En local (desarrollo)
 
+Este modo usa **Docker solo para la base de datos** y corre la API directamente en tu máquina, lo que permite hot-reload inmediato sin reconstruir imágenes.
+
+```
+┌─────────────────────┐        ┌──────────────────────┐
+│  Tu máquina (local) │        │  Docker              │
+│                     │        │                      │
+│  yarn start:dev     │───────►│  expense_tracker_db  │
+│  localhost:3000     │        │  PostgreSQL :5432    │
+└─────────────────────┘        └──────────────────────┘
+```
+
+**Primera vez:**
+
 ```bash
 # 1. Instalar dependencias
-npm install
+yarn install
 
-# 2. Crear archivo de entorno
+# 2. Crear archivo de entorno (no requiere cambios, apunta a Docker)
 cp .env.example .env
-# Ajustar DATABASE_URL para apuntar a un PostgreSQL local
 
-# 3. Generar el cliente Prisma
-npm run prisma:generate
+# 3. Levantar solo la base de datos en Docker
+docker-compose up postgres -d
 
-# 4. Ejecutar migraciones
-npm run prisma:migrate
+# 4. Crear las tablas (ejecutar una sola vez)
+npx prisma migrate dev --name init
 
-# 5. Iniciar en modo desarrollo (hot-reload)
-npm run start:dev
+# 5. Iniciar la API con hot-reload
+yarn start:dev
+```
+
+**Usos posteriores** (la BD ya existe):
+
+```bash
+# Levantar la BD (si no está corriendo)
+docker-compose up postgres -d
+
+# Arrancar la API
+yarn start:dev
+```
+
+> **Nota:** si `prisma migrate dev` falla porque la BD ya tiene datos, usar `npx prisma db push` en su lugar.
+
+**URLs disponibles en modo local:**
+
+| Recurso | URL |
+|---|---|
+| API base | `http://localhost:3000/api/v1` |
+| Swagger UI | `http://localhost:3000/docs` |
+
+**Comandos útiles durante el desarrollo:**
+
+```bash
+# Ver logs de la BD
+docker logs expense_tracker_db
+
+# Abrir Prisma Studio (explorador visual de la BD)
+npx prisma studio
+
+# Detener la BD
+docker-compose stop postgres
 ```
 
 ---

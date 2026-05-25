@@ -25,12 +25,21 @@ async function bootstrap() {
       `## API REST de gestión de gastos personales\n\n` +
       `Permite a usuarios autenticados registrar **ingresos y gastos**, organizarlos por **categorías**, ` +
       `definir **presupuestos mensuales** y consultar **reportes** financieros.\n\n` +
-      `### Autenticación\n` +
+      `---\n\n` +
+      `### Autenticación — cómo usar Swagger\n` +
       `1. Registrarse en **POST /auth/register**\n` +
-      `2. Iniciar sesión en **POST /auth/login** para obtener el token JWT\n` +
-      `3. Hacer clic en el botón **Authorize 🔒** e ingresar: \`Bearer <token>\`\n\n` +
-      `### Autores\n` +
-      `Juan Diego Aguilar Ángel · Juan Patiño Florez — Politécnico Grancolombiano`,
+      `2. Iniciar sesión en **POST /auth/login** → copiar el valor de \`token\` en la respuesta\n` +
+      `3. Hacer clic en **Authorize 🔒** (arriba a la derecha) e ingresar: \`Bearer <token>\`\n` +
+      `4. Todos los demás endpoints quedan habilitados automáticamente\n\n` +
+      `---\n\n` +
+      `### Información académica\n` +
+      `| | |\n` +
+      `|---|---|\n` +
+      `| **Curso** | Integración Continua |\n` +
+      `| **Profesor** | Jesús Figueroa Guerrero |\n` +
+      `| **Institución** | Politécnico Grancolombiano |\n` +
+      `| **Entrega** | 1 — Semana 3 |\n` +
+      `| **Autores** | Juan Diego Aguilar Ángel · Juan Patiño Flórez · Juan Camilo Pinzón Marín · Julián Giovanny Rey Mora · Marta Teresa Velandia Urrego |`,
     )
     .setVersion('1.0')
     .addBearerAuth(
