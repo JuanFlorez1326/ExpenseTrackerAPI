@@ -9,8 +9,76 @@ API REST de gestión de gastos personales desarrollada con **NestJS**, **TypeScr
 
 ---
 
+## Entrega 1 — Semana 3
+
+> **Requisito:** Crear el proyecto dentro de los repositorios GitHub y emplear Docker para construir dos contenedores que estén comunicados entre sí.
+
+### Repositorio GitHub
+
+El código fuente del proyecto está publicado en:
+
+```
+https://github.com/JuanFlorez1326/ExpenseTrackerAPI
+```
+
+### Dos contenedores Docker comunicados
+
+El archivo `docker-compose.yml` define exactamente dos servicios que se comunican a través de la red interna `expense_network`:
+
+| # | Nombre del contenedor | Imagen | Puerto expuesto | Rol |
+|---|---|---|---|---|
+| 1 | `expense_tracker_db` | `postgres:16-alpine` | `5432` | Base de datos PostgreSQL |
+| 2 | `expense_tracker_api` | Build local (NestJS) | `3000` | API REST |
+
+**Comunicación entre contenedores:** la API referencia a la BD por nombre de servicio (`postgres:5432`) dentro de la red `expense_network`. No se usa IP directa. El contenedor de la API espera que el de la BD esté saludable (`healthcheck`) antes de iniciar.
+
+```yaml
+# Extracto de docker-compose.yml
+services:
+  postgres:               # Contenedor 1 — Base de datos
+    image: postgres:16-alpine
+    networks: [expense_network]
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+
+  api:                    # Contenedor 2 — API NestJS
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/expense_tracker
+    networks: [expense_network]
+
+networks:
+  expense_network:
+    driver: bridge
+```
+
+### Verificar que ambos contenedores corren y se comunican
+
+```bash
+# Levantar los dos contenedores
+docker-compose up --build
+
+# En otra terminal — verificar que ambos están UP
+docker ps
+
+# Verificar comunicación: la API debe responder
+curl http://localhost:3000/api/v1/auth/me
+# Esperado: {"statusCode":401,"message":"Unauthorized"}
+# (confirma que la API levantó y llegó a procesar la petición)
+
+# Ver logs de cada contenedor
+docker logs expense_tracker_api
+docker logs expense_tracker_db
+```
+
+---
+
 ## Tabla de contenido
 
+- [Entrega 1 — Semana 3](#entrega-1--semana-3)
 - [Descripción del proyecto](#descripción-del-proyecto)
 - [Tecnologías utilizadas](#tecnologías-utilizadas)
 - [Arquitectura](#arquitectura)
