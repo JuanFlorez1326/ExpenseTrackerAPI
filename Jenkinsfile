@@ -78,6 +78,9 @@ pipeline {
         }
 
         stage('Docker Build') {
+            when {
+                expression { return isUnix() && sh(script: 'docker info > /dev/null 2>&1', returnStatus: true) == 0 }
+            }
             steps {
                 script {
                     docker.build("${IMAGE_NAME}:${IMAGE_TAG}", '--file Dockerfile --target production .')
@@ -88,7 +91,10 @@ pipeline {
 
         stage('Docker Push') {
             when {
-                branch 'main'
+                allOf {
+                    branch 'main'
+                    expression { return isUnix() && sh(script: 'docker info > /dev/null 2>&1', returnStatus: true) == 0 }
+                }
             }
             steps {
                 script {
@@ -113,7 +119,7 @@ pipeline {
     post {
         always {
             cleanWs()
-            sh 'docker rmi ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest || true'
+            sh 'docker rmi ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest 2>/dev/null || true'
         }
         success {
             echo "Pipeline completado exitosamente — Build #${env.BUILD_NUMBER}"

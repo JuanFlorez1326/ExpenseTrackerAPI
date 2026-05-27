@@ -234,6 +234,11 @@ Esperar ~3 minutos mientras Jenkins instala los plugins recomendados.
 
 Completar el formulario con usuario, contraseña y correo electrónico. Hacer clic en **Save and Continue** → **Save and Finish** → **Start using Jenkins**.
 
+> **Si se saltó este paso:** el usuario por defecto es `admin` y la contraseña es la misma clave larga del paso 3. Recuperarla con:
+> ```powershell
+> docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+> ```
+
 ---
 
 ### Paso 6 — Instalar plugins adicionales
@@ -273,7 +278,7 @@ Al finalizar, marcar **Restart Jenkins when installation is complete and no jobs
    - **Definition:** `Pipeline script from SCM`
    - **SCM:** `Git`
    - **Repository URL:** `https://github.com/JuanFlorez1326/ExpenseTrackerAPI`
-   - **Branch Specifier:** `*/main`
+   - **Branch Specifier:** `*/feature/entrega2`
    - **Script Path:** `Jenkinsfile`
 5. Hacer clic en **Save**
 
