@@ -78,9 +78,6 @@ pipeline {
         }
 
         stage('Docker Build') {
-            when {
-                expression { return isUnix() && sh(script: 'docker info > /dev/null 2>&1', returnStatus: true) == 0 }
-            }
             steps {
                 script {
                     docker.build("${IMAGE_NAME}:${IMAGE_TAG}", '--file Dockerfile --target production .')
@@ -90,12 +87,6 @@ pipeline {
         }
 
         stage('Docker Push') {
-            when {
-                allOf {
-                    branch 'main'
-                    expression { return isUnix() && sh(script: 'docker info > /dev/null 2>&1', returnStatus: true) == 0 }
-                }
-            }
             steps {
                 script {
                     withCredentials([usernamePassword(
