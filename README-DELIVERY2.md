@@ -160,15 +160,22 @@ Developer  ──push──►  GitHub  ──webhook──►  Jenkins
 
 ```
 entrega 1/
-├── Jenkinsfile          ← Pipeline declarativo de Jenkins (nuevo)
-└── README-entrega2.md   ← Este documento (nuevo)
+├── Jenkinsfile          ← Pipeline declarativo de Jenkins
+├── .eslintrc.js         ← Configuración de ESLint (requerida por el stage Lint)
+├── .prettierrc          ← Configuración de Prettier (requerida por ESLint)
+├── README-DELIVERY2.md  ← Este documento
+└── package-lock.json    ← Debe estar sincronizado con package.json (npm install)
 ```
+
+> **Importante:** los archivos `.eslintrc.js` y `.prettierrc` deben estar commiteados en el repositorio. Si no existen, el stage **Lint** falla con `ESLint couldn't find a configuration file`. El `package-lock.json` debe estar actualizado con `npm install` antes del primer push; si está desincronizado, el stage **Instalar dependencias** falla con `npm ci` puede only install packages when your package.json and package-lock.json are in sync.
 
 ---
 
 ## 9. Guía de instalación y ejecución desde cero (Windows 11)
 
 Jenkins no se instala directamente en el PC. Se ejecuta como un contenedor Docker, igual que la API y la base de datos de este proyecto. El único prerequisito es tener **Docker Desktop** instalado y corriendo.
+
+> **Prerequisito del repositorio:** antes de ejecutar el pipeline por primera vez, asegurarse de que el repositorio tenga commiteados `.eslintrc.js`, `.prettierrc` y el `package-lock.json` actualizado. Si falta alguno, el pipeline fallará en los stages de Lint o Instalar dependencias.
 
 ### Paso 1 — Verificar Docker
 
@@ -306,3 +313,11 @@ Las etapas se ejecutan en orden:
 > El stage **Docker Push** falla intencionalmente en entornos sin credenciales configuradas — esto es el comportamiento esperado. Los 7 stages anteriores deben completarse en verde.
 
 El reporte de cobertura de Jest queda disponible en la UI del build bajo el enlace **"Cobertura de Código"** en el menú lateral izquierdo de cada ejecución.
+
+---
+
+## 10. Evidencia de ejecución exitosa
+
+Build **#4** ejecutado el 27 de mayo de 2026 — pipeline completado en 1 min 4 seg sobre la rama `feature/entrega2`.
+
+![Jenkins Build #4 exitoso](docs/jenkins-build4-success.png)
