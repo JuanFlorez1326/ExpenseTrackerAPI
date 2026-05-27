@@ -160,7 +160,8 @@ Developer  ──push──►  GitHub  ──webhook──►  Jenkins
 
 ```
 entrega 1/
-├── Jenkinsfile          ← Pipeline declarativo de Jenkins
+├── Jenkinsfile          ← Pipeline declarativo de Jenkins (8 stages)
+├── Dockerfile.jenkins   ← Imagen Jenkins personalizada con Docker CLI incluido
 ├── .eslintrc.js         ← Configuración de ESLint (requerida por el stage Lint)
 ├── .prettierrc          ← Configuración de Prettier (requerida por ESLint)
 ├── README-DELIVERY2.md  ← Este documento
@@ -189,21 +190,34 @@ Si aparece `Docker version 24.x...` o superior, continuar al siguiente paso.
 
 ---
 
-### Paso 2 — Levantar Jenkins en Docker
+### Paso 2 — Construir imagen Jenkins con Docker CLI
 
-Ejecutar el siguiente comando en PowerShell:
+La imagen oficial `jenkins/jenkins` no incluye el cliente Docker. Se usa el `Dockerfile.jenkins` del repositorio para construir una imagen personalizada que sí lo incluye:
+
+```powershell
+docker build -t jenkins-with-docker -f Dockerfile.jenkins .
+```
+
+Tarda ~2 minutos la primera vez.
+
+---
+
+### Paso 3 — Levantar Jenkins en Docker
 
 ```powershell
 docker run -d `
   --name jenkins `
+  -u root `
   -p 8080:8080 `
   -p 50000:50000 `
   -v jenkins_home:/var/jenkins_home `
   -v //var/run/docker.sock:/var/run/docker.sock `
-  jenkins/jenkins:lts-jdk17
+  jenkins-with-docker
 ```
 
-La primera ejecución descarga la imagen (~500 MB), puede tardar unos minutos. Verificar que el contenedor quedó activo:
+> El flag `-u root` es necesario en Windows para que Jenkins pueda acceder al socket de Docker. Sin él, el stage **Docker Build** falla con `permission denied` aunque el socket esté montado.
+
+Verificar que el contenedor quedó activo:
 
 ```powershell
 docker ps
@@ -213,7 +227,7 @@ Debe aparecer `jenkins` con estado `Up`.
 
 ---
 
-### Paso 3 — Abrir Jenkins en el navegador
+### Paso 4 — Abrir Jenkins en el navegador
 
 Ir a: **http://localhost:8080**
 
@@ -227,7 +241,7 @@ Copiar el texto que aparece, pegarlo en el navegador y hacer clic en **Continue*
 
 ---
 
-### Paso 4 — Instalación de plugins base
+### Paso 5 — Instalación de plugins base
 
 Aparecen dos opciones. Seleccionar:
 
@@ -237,7 +251,7 @@ Esperar ~3 minutos mientras Jenkins instala los plugins recomendados.
 
 ---
 
-### Paso 5 — Crear usuario administrador
+### Paso 6 — Crear usuario administrador
 
 Completar el formulario con usuario, contraseña y correo electrónico. Hacer clic en **Save and Continue** → **Save and Finish** → **Start using Jenkins**.
 
@@ -248,7 +262,7 @@ Completar el formulario con usuario, contraseña y correo electrónico. Hacer cl
 
 ---
 
-### Paso 6 — Instalar plugins adicionales
+### Paso 7 — Instalar plugins adicionales
 
 Ir a **Administrar Jenkins → Plugins → Available plugins** e instalar los siguientes tres plugins:
 
@@ -264,7 +278,7 @@ Al finalizar, marcar **Restart Jenkins when installation is complete and no jobs
 
 ---
 
-### Paso 7 — Configurar Node.js 20
+### Paso 8 — Configurar Node.js 20
 
 1. Ir a **Administrar Jenkins → Tools**
 2. Bajar hasta la sección **NodeJS installations**
@@ -276,7 +290,39 @@ Al finalizar, marcar **Restart Jenkins when installation is complete and no jobs
 
 ---
 
-### Paso 8 — Crear el pipeline
+### Paso 9 — Configurar git safe.directory
+
+Al correr Jenkins como root, git 2.35+ bloquea repositorios creados por otros usuarios. Ejecutar una sola vez:
+
+```powershell
+docker exec jenkins git config --global --add safe.directory "*"
+```
+
+---
+
+### Paso 10 — Agregar credenciales de Docker Hub
+
+Para que el stage **Docker Push** pueda publicar la imagen es necesario un token de Docker Hub con permisos de lectura y escritura.
+
+**Crear el token en Docker Hub:**
+1. Ir a [hub.docker.com](https://hub.docker.com) → usuario → **Account Settings → Personal access tokens**
+2. Clic en **Generate new token**
+3. **Description:** `jenkins-push`
+4. **Access permissions:** `Read & Write` *(debe ser Read & Write, no solo Read)*
+5. Copiar el token generado
+
+**Agregar la credencial en Jenkins:**
+1. Ir a **Administrar Jenkins → Credentials → System → Global → Add Credentials**
+2. Completar:
+   - **Kind:** `Username with password`
+   - **Username:** tu usuario de Docker Hub
+   - **Password:** el token copiado
+   - **ID:** `dockerhub-credentials`
+3. Clic en **Create**
+
+---
+
+### Paso 11 — Crear el pipeline
 
 1. En el menú principal hacer clic en **Nueva tarea** (o **New Item**)
 2. Escribir el nombre: `expense-tracker-api`
@@ -291,7 +337,7 @@ Al finalizar, marcar **Restart Jenkins when installation is complete and no jobs
 
 ---
 
-### Paso 9 — Ejecutar el pipeline y ver el resultado
+### Paso 12 — Ejecutar el pipeline y ver el resultado
 
 1. Hacer clic en **Build Now** en el menú izquierdo
 2. Aparece el build `#1` en la sección **Build History**
@@ -303,14 +349,12 @@ Las etapas se ejecutan en orden:
 ✓ Checkout                 → código clonado desde GitHub
 ✓ Instalar dependencias    → npm ci
 ✓ Lint                     → eslint sin errores
-✓ Pruebas unitarias        → 10 tests pasados (AuthService, ExpensesService, CategoriesService)
+✓ Pruebas unitarias        → 12 tests pasados (AuthService, ExpensesService, CategoriesService)
 ✓ Cobertura de código      → reporte HTML disponible en el menú lateral del build
 ✓ Build                    → dist/ generado por NestJS
 ✓ Docker Build             → imagen expense-tracker-api:<n> construida
-✗ Docker Push              → falla esperada (requiere credencial dockerhub-credentials)
+✓ Docker Push              → imagen publicada en Docker Hub con tags :<n> y :latest
 ```
-
-> El stage **Docker Push** falla intencionalmente en entornos sin credenciales configuradas — esto es el comportamiento esperado. Los 7 stages anteriores deben completarse en verde.
 
 El reporte de cobertura de Jest queda disponible en la UI del build bajo el enlace **"Cobertura de Código"** en el menú lateral izquierdo de cada ejecución.
 
@@ -318,6 +362,18 @@ El reporte de cobertura de Jest queda disponible en la UI del build bajo el enla
 
 ## 10. Evidencia de ejecución exitosa
 
-Build **#4** ejecutado el 27 de mayo de 2026 — pipeline completado en 1 min 4 seg sobre la rama `feature/entrega2`.
+Build **#11** ejecutado el 27 de mayo de 2026 — los 8 stages completados exitosamente sobre la rama `feature/entrega2`. Imagen publicada en Docker Hub como `juanflorez1326/expense-tracker-api:11` y `juanflorez1326/expense-tracker-api:latest`.
 
-![Jenkins Build #4 exitoso](docs/jenkins-build4-success.png)
+**Pipeline completado (stages de lint, tests, cobertura y build):**
+
+![Jenkins build exitoso](docs/jenkins-build-success.png)
+
+**Stage Docker Build y Docker Push en verde:**
+
+![Jenkins Docker stages exitosos](docs/jenkins-build-docker-success.png)
+
+**Imagen publicada en Docker Hub:**
+
+![Imagen en Docker Hub](docs/docker-hub-img-success.png)
+
+![Imágenes en Docker Hub](docs/docker-hub-imgs.png)
