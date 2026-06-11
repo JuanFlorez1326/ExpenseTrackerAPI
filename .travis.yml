@@ -20,21 +20,11 @@ env:
     - JWT_SECRET=travis-ci-test-secret
     - JWT_EXPIRES_IN=7d
 
-addons:
-  postgresql: '16'
-  apt:
-    packages:
-      - postgresql-client
-
-before_install:
-  - psql -c "CREATE DATABASE expense_tracker_test;" -U postgres
-
 install:
   - npm ci
 
 before_script:
   - npx prisma generate
-  - npx prisma migrate deploy
 
 script:
   - npm run lint
