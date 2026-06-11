@@ -68,3 +68,89 @@ docker-compose up --build
 
 API disponible en `http://localhost:3000/api/v1`  
 Swagger disponible en `http://localhost:3000/docs`
+
+---
+
+## Evolución del proyecto por entrega
+
+```
+╔═════════════════════════════════════════════════════════════════════════╗
+║                        EXPENSE TRACKER API                              ║
+║              Proyecto de Integración Continua — Politécnico             ║
+╚═════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│  ENTREGA 1 — Semana 3                                                   │
+│  GitHub + Docker                                                        │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   Repositorio GitHub                                                    │
+│   github.com/JuanFlorez1326/ExpenseTrackerAPI                           │
+│                                                                         │
+│   ┌──────────────────────────────────────────┐                          │
+│   │           Red: expense_network           │                          │
+│   │                                          │                          │
+│   │  ┌─────────────────┐   ┌───────────────┐ │                          │
+│   │  │  Contenedor 1   │   │  Contenedor 2 │ │                          │
+│   │  │  expense_       │◄─►│  expense_     │ │                          │
+│   │  │  tracker_api    │   │  tracker_db   │ │                          │
+│   │  │  NestJS :3000   │   │  PostgreSQL   │ │                          │
+│   │  └─────────────────┘   │  :5432        │ │                          │
+│   │                        └───────────────┘ │                          │
+│   └──────────────────────────────────────────┘                          │
+│                                                                         │
+│   Archivos clave: Dockerfile · docker-compose.yml                       │
+└─────────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│  ENTREGA 2 — Semana 5                                                   │
+│  Jenkins CI                                                             │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   git push ──► GitHub ──webhook──► Jenkins :8080                        │
+│                                        │                                │
+│               ┌────────────────────────▼──────────────────────┐         │
+│               │  Pipeline declarativo (Jenkinsfile)           │         │
+│               │                                               │         │
+│               │  1. Checkout          5. Cobertura de código  │         │
+│               │  2. Instalar deps     6. Build (dist/)        │         │
+│               │  3. Lint              7. Docker Build         │         │
+│               │  4. Pruebas unitarias 8. Docker Push          │         │
+│               └───────────────────────────────────────────────┘         │
+│                                        │                                │
+│                                        ▼                                │
+│                               Docker Hub                                │
+│                        juanflorez1326/expense-tracker-api               │
+│                                                                         │
+│   Archivos clave: Jenkinsfile · Dockerfile.jenkins                      │
+└─────────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│  ENTREGA 3 — Semanas 7 y 8                                              │
+│  Travis CI + GitHub Actions (reemplazo de Codeship)                     │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   git push ──► GitHub                                                   │
+│                  │                                                      │
+│                  ├──► Travis CI ──────────────────────────────────┐     │
+│                  │    (.travis.yml)                               │     │
+│                  │    Install → Prisma → Lint → Tests →           │     │
+│                  │    Coverage → Build → Docker Build → Push      │     │
+│                  │                                                │     │
+│                  └──► GitHub Actions ─────────────────────────────┤     │
+│                       (.github/workflows/ci.yml)                  │     │
+│                       Checkout → Node 20 → Install → Prisma →     │     │
+│                       Lint → Tests → Coverage → Build →           │     │
+│                       Docker Login → Docker Push                  │     │
+│                                                                   │     │
+│                                                    ▼              │     │
+│                                             Docker Hub ◄──────────┘     │
+│                                   :latest · :2 (Travis) · :4 (GHA)      │
+│                                                                         │
+│   Archivos clave: .travis.yml · .github/workflows/ci.yml                │
+│                   codeship-services.yml · codeship-steps.yml            │
+│                   (Codeship discontinuado en 2024—archivos conservados) │
+└─────────────────────────────────────────────────────────────────────────┘
+```
