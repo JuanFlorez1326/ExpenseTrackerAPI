@@ -15,7 +15,7 @@ API REST de gestión de gastos personales desarrollada con **NestJS**, **TypeScr
 |---|--------|------|-----------|
 | 1 | Semana 3 | Proyecto en GitHub + dos contenedores Docker comunicados | [README-DELIVERY1.md](README-DELIVERY1.md) |
 | 2 | Semana 5 | Jenkins como gestor de integración continua | [README-DELIVERY2.md](README-DELIVERY2.md) |
-| 3 | Semanas 7-8 | Integración completa: Docker + Jenkins + Travis CI + Codeship | [README-DELIVERY3.md](README-DELIVERY3.md) |
+| 3 | Semanas 7-8 | Integración completa: Docker + Jenkins + Travis CI + GitHub Actions | [README-DELIVERY3.md](README-DELIVERY3.md) |
 
 ---
 
@@ -45,7 +45,7 @@ Ver documentación completa: [README-DELIVERY2.md](README-DELIVERY2.md)
 
 **Requisitos cumplidos:**
 - `.travis.yml` — pipeline completo en Travis CI: lint, pruebas unitarias, cobertura, build, Docker build y push. Build #2 ejecutado exitosamente sobre `feature/entrega3`, imagen publicada en Docker Hub como `:2` y `:latest`.
-- `codeship-services.yml` + `codeship-steps.yml` — pipeline de Codeship Pro con servicios Docker independientes para Node.js, PostgreSQL y la imagen de producción.
+- `.github/workflows/ci.yml` — pipeline de GitHub Actions (reemplazo de Codeship, discontinuado en 2024) con 10 steps: checkout, Node.js, dependencias, Prisma, lint, tests, cobertura, build, Docker login y Docker push.
 - `README-DELIVERY3.md` — documento final con historial de commits, guía de troubleshooting por herramienta, responsabilidades por integrante y lecciones aprendidas.
 
 Ver documentación completa: [README-DELIVERY3.md](README-DELIVERY3.md)

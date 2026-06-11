@@ -366,14 +366,14 @@ Build **#11** ejecutado el 27 de mayo de 2026 — los 8 stages completados exito
 
 **Pipeline completado (stages de lint, tests, cobertura y build):**
 
-![Jenkins build exitoso](docs/jenkins-build-success.png)
+![Jenkins build exitoso](docs/entrega2/jenkins-build-success.png)
 
 **Stage Docker Build y Docker Push en verde:**
 
-![Jenkins Docker stages exitosos](docs/jenkins-build-docker-success.png)
+![Jenkins Docker stages exitosos](docs/entrega2/jenkins-build-docker-success.png)
 
 **Imagen publicada en Docker Hub:**
 
-![Imagen en Docker Hub](docs/docker-hub-img-success.png)
+![Imagen en Docker Hub](docs/entrega2/docker-hub-img-success.png)
 
-![Imágenes en Docker Hub](docs/docker-hub-imgs.png)
+![Imágenes en Docker Hub](docs/entrega2/docker-hub-imgs.png)

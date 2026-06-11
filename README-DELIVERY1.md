@@ -564,3 +564,27 @@ Budget
  ├── userId (FK → User)
  └── categoryId (FK → Category)
 ```
+
+---
+
+## Evidencia de ejecución
+
+### Dos contenedores corriendo simultáneamente
+
+Docker Desktop muestra los cuatro contenedores activos: `jenkins`, `entrega1`, `expense_tracker_api` y `expense_tracker_db`. Los dos últimos corresponden a los contenedores de la Entrega 1 comunicados a través de la red `expense_network`.
+
+![Docker Desktop containers running](docs/entrega1/docker-desktop-containers-running.png)
+
+### API respondiendo desde el contenedor
+
+Swagger UI disponible en `http://localhost:3000/docs`, confirmando que el contenedor `expense_tracker_api` levantó correctamente y estableció conexión con el contenedor `expense_tracker_db`.
+
+![Swagger UI — API running](docs/entrega1/swagger-ui-api-running.png)
+
+### Endpoints disponibles — Auth, Budgets, Categories, Expenses
+
+![Swagger endpoints Auth, Budgets y Categories](docs/entrega1/swagger-endpoints-auth-budgets.png)
+
+### Endpoints disponibles — Reports y Schemas
+
+![Swagger endpoints Reports y Schemas](docs/entrega1/swagger-endpoints-reports.png)

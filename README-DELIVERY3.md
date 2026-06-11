@@ -10,7 +10,7 @@
 
 ## Descripción general de la plataforma
 
-**Expense Tracker API** es una API REST construida con NestJS y PostgreSQL que permite la gestión de gastos personales: registro de usuarios, autenticación JWT, categorías, presupuestos y reportes. En esta entrega final, la plataforma queda completamente integrada con cuatro herramientas de integración y entrega continua: **Docker**, **Jenkins**, **Travis CI** y **Codeship**.
+**Expense Tracker API** es una API REST construida con NestJS y PostgreSQL que permite la gestión de gastos personales: registro de usuarios, autenticación JWT, categorías, presupuestos y reportes. En esta entrega final, la plataforma queda completamente integrada con cuatro herramientas de integración y entrega continua: **Docker**, **Jenkins**, **Travis CI** y **GitHub Actions** (reemplazo funcional de Codeship, discontinuado en 2024).
 
 ---
 
@@ -43,7 +43,7 @@ Checkout → Instalar dependencias → Lint → Pruebas unitarias
         → Cobertura de código → Build → Docker Build → Docker Push
 ```
 
-Jenkins se ejecuta como contenedor usando la imagen personalizada `Dockerfile.jenkins` (Jenkins LTS + Docker CLI). El stage **Docker Push** publica la imagen en Docker Hub únicamente desde la rama `main`, usando las credenciales almacenadas con id `dockerhub-credentials`.
+Jenkins se ejecuta como contenedor usando la imagen personalizada `Dockerfile.jenkins` (Jenkins LTS + Docker CLI). El stage **Docker Push** publica la imagen en Docker Hub en cualquier rama, usando las credenciales almacenadas con id `dockerhub-credentials`.
 
 **Levantar Jenkins en Docker:**
 ```bash
@@ -108,10 +108,8 @@ Push a GitHub → Travis CI
 |---------|-----------|
 | `language: node_js` / `node_js: 20` | Especifica Node.js 20 como runtime |
 | `services: docker` | Habilita el demonio Docker en la VM de CI |
-| `addons: postgresql: 16` | Levanta PostgreSQL 16 para los tests |
-| `before_install` | Crea la base de datos de test en PostgreSQL |
 | `install: npm ci` | Instala dependencias de forma reproducible |
-| `before_script` | Genera el cliente Prisma y aplica migraciones |
+| `before_script` | Genera el cliente Prisma (`npx prisma generate`) sin necesitar DB |
 | `script` | Ejecuta lint, tests unitarios, cobertura y build |
 | `after_success` | Construye la imagen Docker y la publica en Docker Hub |
 | `notifications` | Envía email en caso de fallo o recuperación del build |
@@ -161,6 +159,39 @@ El pipeline está definido en `.github/workflows/ci.yml` y se dispara automátic
 | `docker/login-action` | Autenticación en Docker Hub con secrets |
 | `docker/build-push-action` | Construye y publica la imagen en Docker Hub |
 
+**Paso a paso — activar y configurar GitHub Actions:**
+
+1. En el repositorio de GitHub ir a **Settings → Secrets and variables → Actions**.
+2. Hacer clic en **New repository secret** y agregar dos secrets:
+   - `DOCKER_USERNAME` → usuario de Docker Hub (ej: `juanflorez1326`)
+   - `DOCKER_PASSWORD` → token de Docker Hub con permisos **Read & Write**
+3. Hacer commit y push del archivo `.github/workflows/ci.yml` a la rama `feature/entrega3`:
+   ```bash
+   git add .github/workflows/ci.yml
+   git commit -m "ci: add GitHub Actions workflow as Codeship replacement"
+   git push origin feature/entrega3
+   ```
+4. GitHub detecta el workflow automáticamente y dispara el pipeline.
+5. El progreso se visualiza en la pestaña **Actions** del repositorio.
+6. El job **Build, Test & Push** ejecuta los 10 steps secuencialmente en un runner `ubuntu-latest`.
+7. Al finalizar, la imagen queda publicada en Docker Hub con los tags `:<run_number>` y `:latest`.
+
+**Resultado del Run #1 — `feature/entrega3` — 3m 18s — todos los steps en verde:**
+
+| Step | Tiempo |
+|------|--------|
+| Set up job | 3s |
+| Checkout | 1s |
+| Setup Node.js 20 | 5s |
+| Install dependencies | 1m 1s |
+| Generate Prisma client | 1s |
+| Lint | 4s |
+| Unit tests | 6s |
+| Code coverage | 12s |
+| Build | 3s |
+| Login to Docker Hub | 1s |
+| Build and push Docker image | 1m 36s |
+
 ---
 
 ## 2. Historial de cambios
@@ -202,14 +233,14 @@ El pipeline está definido en `.github/workflows/ci.yml` y se dispara automátic
 | Falla de conexión a PostgreSQL | Addon de PostgreSQL no disponible en el plan | Verificar que el plan de Travis CI incluya el addon; usar una base de datos SQLite en memoria como alternativa para los tests |
 | Docker push bloqueado | Travis CI desactivó Docker Hub push gratuito | Usar un registry alternativo (GitHub Container Registry o GitLab Registry) |
 
-### 3.3 Codeship
+### 3.3 GitHub Actions
 
 | Problema | Causa | Solución |
 |----------|-------|----------|
-| `dockercfg.encrypted` inválido | Cifrado con versión incorrecta de `jet` | Descargar la versión más reciente de `jet` y volver a cifrar |
-| Paso `docker-push` falla | Archivo `dockercfg.encrypted` no commiteado | Hacer commit del archivo cifrado al repositorio |
-| Servicio `postgres` no listo cuando inicia `node` | Race condition en el arranque | Agregar un step de espera: `command: until pg_isready -h postgres; do sleep 1; done` |
-| Pipeline no usa `codeship-steps.yml` | Tipo de proyecto configurado como Codeship Basic | Crear un nuevo proyecto de tipo **Codeship Pro** en app.codeship.com |
+| Workflow no se dispara | Archivo `.github/workflows/ci.yml` no commiteado o en ruta incorrecta | Verificar que la ruta sea exactamente `.github/workflows/ci.yml` |
+| `DOCKER_USERNAME` o `DOCKER_PASSWORD` no reconocidas | Secrets no configurados en el repositorio | Ir a **Settings → Secrets and variables → Actions** y agregar ambos secrets |
+| Step **Build and push Docker image** falla con "unauthorized" | Token de Docker Hub expirado o sin permisos | Regenerar el token en Docker Hub con permisos **Read & Write** y actualizar el secret |
+| Workflow corre pero no pushea imagen | Secret `DOCKER_USERNAME` o `DOCKER_PASSWORD` con nombre incorrecto | Verificar que el nombre del secret coincida exactamente con el usado en `ci.yml` |
 
 ### 3.4 Docker / Docker Compose
 
@@ -256,9 +287,12 @@ El mayor aprendizaje de este proyecto fue entender que la integración continua 
 
 ```
 entrega 1/
+├── .github/
+│   └── workflows/
+│       └── ci.yml           ← Pipeline de GitHub Actions (10 steps)
 ├── .travis.yml              ← Pipeline de Travis CI
-├── codeship-services.yml    ← Servicios Docker de Codeship Pro
-├── codeship-steps.yml       ← Etapas del pipeline de Codeship Pro
+├── codeship-services.yml    ← Servicios Codeship Pro (conservado, servicio discontinuado)
+├── codeship-steps.yml       ← Etapas Codeship Pro (conservado, servicio discontinuado)
 ├── Jenkinsfile              ← Pipeline declarativo de Jenkins (8 stages)
 ├── Dockerfile               ← Imagen multi-stage de la API (builder + production)
 ├── Dockerfile.jenkins       ← Imagen Jenkins personalizada con Docker CLI
@@ -278,15 +312,37 @@ Build **#2** ejecutado sobre la rama `feature/entrega3`, commit `ffd2ac6`, durac
 
 **Dashboard de Travis CI — repositorio con build pasado:**
 
-![Travis CI dashboard passed](docs/travis-ci-dashboard-passed.png)
+![Travis CI dashboard passed](docs/entrega3/travis-ci-dashboard-passed.png)
 
 **Detalle del Build #2 — rama `feature/entrega3` en verde:**
 
-![Travis CI build #2 detail](docs/travis-ci-build2-detail.png)
+![Travis CI build #2 detail](docs/entrega3/travis-ci-build2-detail.png)
 
 **Imagen publicada en Docker Hub — tags `:2` y `:latest` pusheados por Travis CI:**
 
-![Travis CI Docker Hub push](docs/travis-ci-docker-hub-push.png)
+![Travis CI Docker Hub push](docs/entrega3/travis-ci-docker-hub-push.png)
+
+---
+
+### GitHub Actions — Run #1 en rama `feature/entrega3`
+
+Run **#1** ejecutado sobre la rama `feature/entrega3`, duración 3 min 18s. Los 10 steps completados exitosamente: checkout, Node.js 20, dependencias, Prisma, lint, tests, cobertura, build, Docker login y Docker push.
+
+**Repositorio en GitHub — todos los checks pasados (GitHub Actions + Travis CI simultáneamente):**
+
+![GitHub Actions checks passed](docs/entrega3/github-actions-checks-passed.png)
+
+**Detalle del Run #1 — job Build, Test & Push en verde:**
+
+![GitHub Actions run #1 overview](docs/entrega3/github-actions-run1-overview.png)
+
+**Steps completos del run con tiempos:**
+
+![GitHub Actions run #1 steps](docs/entrega3/github-actions-run1-steps.png)
+
+**Imagen publicada en Docker Hub — tags `:4`, `:1`, `:latest` generados por GitHub Actions:**
+
+![GitHub Actions Docker Hub push](docs/entrega3/github-actions-docker-hub-push.png)
 
 ---
 
@@ -317,18 +373,19 @@ GitHub (repositorio)
     │               Coverage → Build →
     │               Docker Build → Docker Push
     │
-    └──── evento ─────► Codeship Pro (app.codeship.com)
+    └──── evento ─────► GitHub Actions
                             │
                             ▼
-                    Pipeline en contenedores
-                    (codeship-services.yml +
-                     codeship-steps.yml)
+                    Pipeline en runner
+                    ubuntu-latest
+                    (.github/workflows/ci.yml)
+                    Checkout → Node 20 →
                     Install → Prisma → Lint →
                     Tests → Coverage → Build →
-                    Docker Push
+                    Docker Login → Docker Push
                             │
                             ▼
                       Docker Hub
               juanflorez1326/expense-tracker-api
-                  :latest | :<build-number>
+                  :latest | :<run-number>
 ```
