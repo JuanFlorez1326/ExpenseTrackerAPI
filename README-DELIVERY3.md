@@ -264,7 +264,27 @@ entrega 1/
 
 ---
 
-## 7. Diagrama de integración completa
+## 7. Evidencia de ejecución exitosa
+
+### Travis CI — Build #2 en rama `feature/entrega3`
+
+Build **#2** ejecutado sobre la rama `feature/entrega3`, commit `ffd2ac6`, duración 3 min 59 seg. Todas las etapas completadas exitosamente: lint, pruebas unitarias, cobertura, build, Docker build y Docker push.
+
+**Dashboard de Travis CI — repositorio con build pasado:**
+
+![Travis CI dashboard passed](docs/travis-ci-dashboard-passed.png)
+
+**Detalle del Build #2 — rama `feature/entrega3` en verde:**
+
+![Travis CI build #2 detail](docs/travis-ci-build2-detail.png)
+
+**Imagen publicada en Docker Hub — tags `:2` y `:latest` pusheados por Travis CI:**
+
+![Travis CI Docker Hub push](docs/travis-ci-docker-hub-push.png)
+
+---
+
+## 8. Diagrama de integración completa
 
 ```
 Developer
