@@ -1,0 +1,33 @@
+node:
+  image: node:20-alpine
+  volumes:
+    - ./:/app
+  working_dir: /app
+  environment:
+    NODE_ENV: test
+    DATABASE_URL: postgresql://postgres:postgres@postgres:5432/expense_tracker_test
+    JWT_SECRET: codeship-ci-test-secret
+    JWT_EXPIRES_IN: 7d
+  depends_on:
+    - postgres
+
+postgres:
+  image: postgres:16-alpine
+  environment:
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_DB: expense_tracker_test
+
+app:
+  build:
+    image: expense-tracker-api
+    dockerfile: Dockerfile
+    target: production
+  environment:
+    NODE_ENV: production
+    DATABASE_URL: postgresql://postgres:postgres@postgres:5432/expense_tracker
+    JWT_SECRET: codeship-ci-prod-secret
+    JWT_EXPIRES_IN: 7d
+    PORT: 3000
+  depends_on:
+    - postgres
