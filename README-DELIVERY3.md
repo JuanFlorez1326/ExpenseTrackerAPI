@@ -118,42 +118,48 @@ Push a GitHub → Travis CI
 
 ---
 
-### 1.4 Codeship (Entrega 3)
+### 1.4 Codeship → reemplazado por GitHub Actions (Entrega 3)
 
-Configurado mediante dos archivos: `codeship-services.yml` (define los contenedores del pipeline) y `codeship-steps.yml` (define las etapas secuenciales de CI/CD).
+> **Codeship fue discontinuado por CloudBees en 2024.** Al intentar acceder a `app.codeship.com` el servicio devuelve una página en blanco (nginx), confirmando que la plataforma ya no está operativa. Los archivos de configuración `codeship-services.yml` y `codeship-steps.yml` fueron preparados y se conservan en el repositorio como evidencia del diseño del pipeline, pero no pueden ejecutarse.
 
-**Flujo de Codeship Pro:**
+Como reemplazo funcional se implementó **GitHub Actions**, que comparte el mismo concepto (pipeline como código en YAML), está integrado nativamente en GitHub y es la herramienta de CI/CD más adoptada en la industria actualmente.
+
+**Flujo de GitHub Actions:**
 
 ```
-Push a GitHub → Codeship Pro
+Push a GitHub → GitHub Actions
                     │
           ┌─────────▼──────────────────┐
-          │  Servicio: node (Node 20)   │
-          │  1. npm ci                  │
-          │  2. prisma generate         │
-          │  3. prisma migrate deploy   │
-          │  4. Lint                    │
-          │  5. Unit Tests              │
-          │  6. Code Coverage           │
-          │  7. Build                   │
-          │  Servicio: app (Docker)     │
-          │  8. Docker Push*            │
+          │  Runner: ubuntu-latest      │
+          │  1. Checkout                │
+          │  2. Setup Node.js 20        │
+          │  3. npm ci                  │
+          │  4. prisma generate         │
+          │  5. Lint                    │
+          │  6. Unit Tests              │
+          │  7. Code Coverage           │
+          │  8. Build                   │
+          │  9. Docker Build            │
+          │ 10. Docker Push             │
           └────────────────────────────┘
-               * solo en main
 ```
 
-**Activar Codeship Pro:**
-1. Ingresar a https://app.codeship.com
-2. Crear un nuevo proyecto → conectar repositorio de GitHub
-3. Seleccionar **Codeship Pro** como tipo de proyecto
-4. Generar y cifrar credenciales de Docker Hub:
-   ```bash
-   jet encrypt dockercfg dockercfg.encrypted
-   ```
-5. Hacer commit de `dockercfg.encrypted` al repositorio
-6. El pipeline se dispara automáticamente en cada push
+El pipeline está definido en `.github/workflows/ci.yml` y se dispara automáticamente en cada push a cualquier rama.
 
-> **Nota:** La herramienta `jet` (CLI de Codeship) se descarga desde https://github.com/codeship/jet/releases para generar el archivo `dockercfg.encrypted`. Este archivo cifrado nunca expone las credenciales en texto plano.
+**Descripción del archivo `.github/workflows/ci.yml`:**
+
+| Job / Step | Contenido |
+|------------|-----------|
+| `actions/checkout@v4` | Clona el repositorio |
+| `actions/setup-node@v4` | Instala Node.js 20 con caché de npm |
+| `npm ci` | Instala dependencias de forma reproducible |
+| `npx prisma generate` | Genera el cliente Prisma (sin necesitar DB) |
+| `npm run lint` | Verifica calidad de código con ESLint |
+| `npm run test` | Ejecuta las 12 pruebas unitarias con Jest |
+| `npm run test:cov` | Genera reporte de cobertura |
+| `npm run build` | Compila TypeScript con NestJS CLI |
+| `docker/login-action` | Autenticación en Docker Hub con secrets |
+| `docker/build-push-action` | Construye y publica la imagen en Docker Hub |
 
 ---
 

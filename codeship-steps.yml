@@ -6,10 +6,6 @@
   service: node
   command: npx prisma generate
 
-- name: migrate-database
-  service: node
-  command: npx prisma migrate deploy
-
 - name: lint
   service: node
   command: npm run lint

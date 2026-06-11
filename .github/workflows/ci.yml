@@ -1,0 +1,64 @@
+name: CI — Expense Tracker API
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['**']
+
+jobs:
+  build-and-push:
+    name: Build, Test & Push
+    runs-on: ubuntu-latest
+
+    env:
+      IMAGE_NAME: expense-tracker-api
+      NODE_ENV: test
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/expense_tracker_test
+      JWT_SECRET: github-actions-test-secret
+      JWT_EXPIRES_IN: 7d
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm run test -- --ci --forceExit --passWithNoTests
+
+      - name: Code coverage
+        run: npm run test:cov -- --ci --forceExit
+
+      - name: Build
+        run: npm run build
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          target: production
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.run_number }}
+            ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
