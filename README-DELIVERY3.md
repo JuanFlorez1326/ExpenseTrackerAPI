@@ -71,10 +71,9 @@ Push a GitHub → Travis CI
           │  3. Unit Tests      │
           │  4. Code Coverage   │
           │  5. Build           │
-          │  6. Docker Build*   │
-          │  7. Docker Push*    │
+          │  6. Docker Build    │
+          │  7. Docker Push     │
           └────────────────────┘
-               * solo en main
 ```
 
 **Variables de entorno requeridas en Travis CI** (configurar en Settings del repositorio en travis-ci.com):
@@ -84,12 +83,38 @@ Push a GitHub → Travis CI
 | `DOCKER_USERNAME` | Usuario de Docker Hub |
 | `DOCKER_PASSWORD` | Token de acceso de Docker Hub (Read & Write) |
 
-**Activar Travis CI:**
-1. Ingresar a https://app.travis-ci.com
-2. Sincronizar cuenta de GitHub
-3. Activar el repositorio `ExpenseTrackerAPI`
-4. Agregar las variables de entorno en **Settings → Environment Variables**
-5. El pipeline se disparará automáticamente en el siguiente push
+**Paso a paso — activar y configurar Travis CI:**
+
+1. Ingresar a **https://app.travis-ci.com** e iniciar sesión con la cuenta de GitHub.
+2. Hacer clic en **Sync account** para que Travis CI detecte los repositorios disponibles.
+3. Buscar el repositorio `ExpenseTrackerAPI` y activarlo con el toggle.
+4. Ir a **Settings** del repositorio dentro de Travis CI.
+5. En la sección **Environment Variables** agregar las dos variables:
+   - `DOCKER_USERNAME` → usuario de Docker Hub (ejemplo: `juanflorez1326`)
+   - `DOCKER_PASSWORD` → token de Docker Hub con permisos **Read & Write**
+   - Marcar la opción **Display value in build log: OFF** para no exponer el token en los logs
+6. Hacer commit y push del archivo `.travis.yml` a la rama `feature/entrega3`:
+   ```bash
+   git add .travis.yml
+   git commit -m "ci: add Travis CI configuration"
+   git push origin feature/entrega3
+   ```
+7. Travis CI detecta el push automáticamente y dispara el pipeline.
+8. El progreso se visualiza en **https://app.travis-ci.com/github/JuanFlorez1326/ExpenseTrackerAPI**.
+
+**Descripción del archivo `.travis.yml`:**
+
+| Sección | Contenido |
+|---------|-----------|
+| `language: node_js` / `node_js: 20` | Especifica Node.js 20 como runtime |
+| `services: docker` | Habilita el demonio Docker en la VM de CI |
+| `addons: postgresql: 16` | Levanta PostgreSQL 16 para los tests |
+| `before_install` | Crea la base de datos de test en PostgreSQL |
+| `install: npm ci` | Instala dependencias de forma reproducible |
+| `before_script` | Genera el cliente Prisma y aplica migraciones |
+| `script` | Ejecuta lint, tests unitarios, cobertura y build |
+| `after_success` | Construye la imagen Docker y la publica en Docker Hub |
+| `notifications` | Envía email en caso de fallo o recuperación del build |
 
 ---
 
