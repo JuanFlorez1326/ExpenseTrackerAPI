@@ -18,6 +18,10 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '10'))
     }
 
+    triggers {
+        pollSCM('* * * * *')
+    }
+
     stages {
 
         stage('Checkout') {
