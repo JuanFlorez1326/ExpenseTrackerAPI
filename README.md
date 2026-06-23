@@ -155,4 +155,4 @@ Swagger disponible en `http://localhost:3000/docs`
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-Expense Tracker API - Backend
+Expense Tracker API
