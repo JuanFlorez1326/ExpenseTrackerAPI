@@ -154,3 +154,5 @@ Swagger disponible en `http://localhost:3000/docs`
 │                   (Codeship discontinuado en 2024—archivos conservados) │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
+
+Expense Tracker API - Backend
