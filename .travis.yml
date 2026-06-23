@@ -1,0 +1,54 @@
+language: node_js
+node_js:
+  - '20'
+
+os: linux
+dist: focal
+
+services:
+  - docker
+
+cache:
+  directories:
+    - node_modules
+
+env:
+  global:
+    - IMAGE_NAME=expense-tracker-api
+    - NODE_ENV=test
+    - DATABASE_URL=postgresql://postgres:postgres@localhost:5432/expense_tracker_test
+    - JWT_SECRET=travis-ci-test-secret
+    - JWT_EXPIRES_IN=7d
+
+install:
+  - npm ci
+
+before_script:
+  - npx prisma generate
+
+script:
+  - npm run lint
+  - npm run test -- --ci --forceExit --passWithNoTests
+  - npm run test:cov -- --ci --forceExit
+  - npm run build
+
+after_success:
+  - docker build -t "${IMAGE_NAME}:${TRAVIS_BUILD_NUMBER}" --file Dockerfile --target production .
+  - docker build -t "${IMAGE_NAME}:latest" --file Dockerfile --target production .
+  - |
+    echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    docker tag "${IMAGE_NAME}:${TRAVIS_BUILD_NUMBER}" "${DOCKER_USERNAME}/${IMAGE_NAME}:${TRAVIS_BUILD_NUMBER}"
+    docker tag "${IMAGE_NAME}:latest"                 "${DOCKER_USERNAME}/${IMAGE_NAME}:latest"
+    docker push "${DOCKER_USERNAME}/${IMAGE_NAME}:${TRAVIS_BUILD_NUMBER}"
+    docker push "${DOCKER_USERNAME}/${IMAGE_NAME}:latest"
+    echo "Imagen publicada en Docker Hub: ${DOCKER_USERNAME}/${IMAGE_NAME}:${TRAVIS_BUILD_NUMBER}"
+
+after_failure:
+  - echo "Build #${TRAVIS_BUILD_NUMBER} fallido en rama ${TRAVIS_BRANCH}"
+
+notifications:
+  email:
+    recipients:
+      - juanks339@gmail.com
+    on_success: change
+    on_failure: always
